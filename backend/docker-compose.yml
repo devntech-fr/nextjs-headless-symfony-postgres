@@ -5,48 +5,76 @@ services:
     image: composer
     command: update
     volumes:
-      - ./wordpress:/app
+#      - ./wordpress:/wordpress
+      - ./symfony:/symfony
 
-  mysql:
-    image: mysql:8.0
-    volumes:
-      - mysql_data:/var/lib/mysql
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: wordpress
-      MYSQL_USER: wordpress
-      MYSQL_PASSWORD: wordpress
-    volumes:
-      -  ./mysql:/var/lib/mysql
-
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    depends_on:
-      - mysql
-    environment:
-      PMA_HOST: mysql
-      PMA_PORT: 3306
-      PMA_ARBITRARY: 1
-    restart: always
+  symfony:
+    build:
+      context: php
+      args:
+        GIT_REPOSITORY_TO_CLONE: https://github.com/devntech-fr/psychomot-symfony-api.git
+        DATABASE_URL: postgresql://symfony:changeme@postgres.backend_postgres:5400/symfony?serverVersion=13&charset=utf8
+    container_name: symfony
     ports:
-      - 8183:80
-
-  wordpress:
+      - "8000:80"
+    volumes:
+      - ./symfony:/var/www/symfony
+      - ./php/vhosts:/etc/apache2/sites-enabled
+    restart: always
+    environment:
+      SYMFONY_DB_HOST: postgres
+      SYMFONY_PROJECT_NAME: symfony
+      SYMFONY_DB_NAME: symfony
+      SYMFONY_DB_USER: postgres
+      SYMFONY_DB_PASSWORD: changeme
+    networks:
+      - postgres
     depends_on:
-      - mysql
       - composer
-    image: wordpress:latest
+      - postgres
+
+  maildev:
+    image: maildev/maildev
+    container_name: maildev
+    command: bin/maildev --web 81 --smtp 25 --hide-extensions STARTTLS
     ports:
-      - "8020:80"
+      - "8081:81"
     restart: always
+
+  postgres:
+    container_name: postgres
+    image: postgres
     environment:
-      WORDPRESS_DB_HOST: mysql:3306
-      WORDPRESS_DB_USER: wordpress
-      WORDPRESS_DB_PASSWORD: wordpress
-      WORDPRESS_DB_NAME: wordpress
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      PGDATA: /data/postgres
     volumes:
-      - ./wordpress:/var/www/html
+      - postgres:/data/postgres
+    ports:
+      - "5400:5400"
+    networks:
+      - postgres
+    restart: unless-stopped
+
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-changeme}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    networks:
+      - postgres
+    restart: unless-stopped
+
+networks:
+  postgres:
+    driver: bridge
 
 volumes:
-  mysql_data: {}
+  postgres:
+  pgadmin:

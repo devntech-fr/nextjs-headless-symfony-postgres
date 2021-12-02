@@ -8,6 +8,7 @@ import PropTypes from 'prop-types';
 
 const Layout = ( {data, isPost, children} ) => {
 	const {page, post, posts, header, footer, headerMenus, footerMenus} = data || {};
+	console.log('header:', header);
 
 	// If it does not have either post or page.
 	if ( isEmpty( page ) && isEmpty( post ) && isEmpty( posts ) ) {
@@ -21,7 +22,7 @@ const Layout = ( {data, isPost, children} ) => {
 		<div>
 			<Seo seo={seo} uri={uri}/>
 			<Head>
-				<link rel="shortcut icon" href={header?.favicon}/>
+				{/*<link rel="shortcut icon" href={header?.favicon}/>*/}
 				{seo?.schemaDetails ? (
 					<script
 						type='application/ld+json'

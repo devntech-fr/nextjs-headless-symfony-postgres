@@ -11,8 +11,8 @@ BOLD='\033[1m'
 function proceed_with_WP_environment() {
 
     # user-input - WP Backend URL
-    read -p "$(echo -e $BOLD"✍️  What is your WP backend URL? (defaults to http://localhost:8020): "$NOCOLOR)" WP_backend_url
-    [ -z "$WP_backend_url" ] && echo -e $YELLOW"⚠️  Using default WP URL"$NOCOLOR && WP_backend_url="http://localhost:8020"
+    read -p "$(echo -e $BOLD"✍️  What is your WP backend URL? (defaults to http://localhost:8000): "$NOCOLOR)" WP_backend_url
+    [ -z "$WP_backend_url" ] && echo -e $YELLOW"⚠️  Using default WP URL"$NOCOLOR && WP_backend_url="http://localhost:8000"
     check_url_input $WP_backend_url
     echo "NEXT_PUBLIC_WORDPRESS_SITE_URL=$WP_backend_url" > frontend/.env
 
@@ -22,9 +22,9 @@ function proceed_with_WP_environment() {
     # if no port in URL then use port 80
     if [[ $WP_backend_url_port == "" ]]
     then
-        sed -i -e "s/8020\:80/80:80/g" backend/docker-compose.yml
+        sed -i -e "s/8000\:80/80:80/g" backend/docker-compose.yml
     else
-        sed -i -e "s/8020\:80/$WP_backend_url_port\:80/g" backend/docker-compose.yml
+        sed -i -e "s/8000\:80/$WP_backend_url_port\:80/g" backend/docker-compose.yml
     fi
 
     echo ""
